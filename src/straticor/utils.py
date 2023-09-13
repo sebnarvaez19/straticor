@@ -123,7 +123,7 @@ def lithology_to_environemnt(lithology: float | int) -> int:
         case 21 | 22 | 23:
             envi = 6
         case _:
-            envi = 25
+            envi = 7
 
     return envi
 
