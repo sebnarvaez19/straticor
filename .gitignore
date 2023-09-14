@@ -144,3 +144,4 @@ dmypy.json
 # Own
 /.vscode
 /data
+/labo
