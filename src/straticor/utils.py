@@ -196,55 +196,78 @@ def environment_label(environment: int) -> str:
     return label
 
 
-def fix_frequency(
-    column: DataFrame,
-    delta: float | None = None,
-    interp_method: str = "nearest",
-    labels: bool = True,
-) -> DataFrame:
+def fix_frequency(column: DataFrame, delta: None | float = None):
     """
-    fix_frequency Set a fixed frequency for column data interpolating with the defined method.
+    fix_frequency Fix the frequency of a column.
 
     Parameters
     ----------
     column : DataFrame
-        Column data
-    delta : float | None, optional
-        If defined, is the fixed delta to interpolate the series, by default None
-    interp_method : str, optional
-        ```interp1d``` interpolation method (```kind=```), by default "nearest"
-    labels : bool, optional
-        If True, calculate the label and color, by default True
+        Column to fix.
+    delta : None | float, optional
+        Delta to use, by default None
 
     Returns
     -------
     DataFrame
-        Interpolated column data
+        Fixed column.
     """
-    delta = np.min(np.diff(column["bottom"])) if delta is None else delta
+    
+    x = column["bottom"].values
+    y = column["environment"].values
+    
+    def min_abs_diff(x):
+        x_diff = np.diff(x)
+        x_diff = x_diff[np.nonzero(x_diff)]
+        
+        return np.min(np.abs(x_diff))
 
-    interp_func = interp1d(
-        column["bottom"],
-        column["environment"],
-        kind=interp_method,
-        fill_value="extrapolate", # type: ignore
-    )
+    differences = np.concatenate([np.diff(y), [0]])
+    change_points = [bp for bp, d in zip(x, differences) if d != 0]
+    change_points.append(x[-1])
+    change_points = [x[0]] + change_points
 
-    fixed_bottom = np.arange(
-        column["bottom"].min(), column["bottom"].max() + delta, delta
-    )
-    fixed_environment = interp_func(fixed_bottom)
+    if delta is None:
+        delta = min_abs_diff(x)
+    
+    steps = int(np.abs(better_round((x[-1] - x[0]) / delta) + 1))
 
-    fixed_data = pd.DataFrame(dict(bottom=fixed_bottom, environment=fixed_environment))
+    x_new = np.linspace(x[0], x[-1], steps)
+    y_new = np.zeros_like(x_new)
 
-    if labels:
-        fixed_data["color"] = environment_color(fixed_environment)
-        fixed_data["label"] = environment_label(fixed_environment)
+    if x[-1] > x[0]:
+        for x1, x2 in zip(change_points[:-1], change_points[1:]):
+            try:
+                subset = (x > x1) & (x <= x2)
+                value = np.argmax(np.bincount(y[subset]))
 
-    return fixed_data
+                y_new[(x_new > x1) & (x_new <= x2)] = value
+            except:
+                pass
+
+    else:
+        for x1, x2 in zip(change_points[:-1], change_points[1:]):
+            try:
+                subset = (x < x1) & (x >= x2)
+                value = np.argmax(np.bincount(y[subset]))
+
+                y_new[(x_new < x1) & (x_new >= x2)] = value
+            except:
+                pass
+
+    y_new[y_new == 0] = 7
+    
+    y_new = better_round(y_new)
+
+    colors = environment_color(y_new)
+    labels = environment_label(y_new)
+
+    new_column = pd.DataFrame({"bottom": x_new, "environment": y_new, "color": colors, "label": labels})
+
+    return new_column
 
 
-def load_column(path: str, serialize: bool = False, **fix_frequency_kwargs) -> DataFrame:
+def load_column(path: str, fix: bool = False, **fix_frequency_kwargs) -> DataFrame:
     """
     load_column Load a column from an SDAR Excel file and process it.
 
@@ -252,7 +275,7 @@ def load_column(path: str, serialize: bool = False, **fix_frequency_kwargs) -> D
     ----------
     path : str
         Excel file location
-    serialize : bool, optional
+    fix : bool, optional
         If True, run ```fix_frequency``` to get a column ready to be correlated, by default False
 
     Returns
@@ -261,18 +284,18 @@ def load_column(path: str, serialize: bool = False, **fix_frequency_kwargs) -> D
         Column processed.
     """
     data_base = pd.read_excel(path, sheet_name="lithology")
-    column = data_base[data_base.columns[:7]]
+    column = data_base[data_base.columns[:7]].copy()
 
-    column = column.sort_values(by="base", ascending=False)
+    # column = column.sort_values(by="base", ascending=False)
     column["environment"] = lithology_to_environemnt(column["prim_litho"])
     column["color"] = environment_color(column["environment"])
     column["label"] = environment_label(column["environment"])
 
     column = column[["base", "environment", "color", "label"]]
     column = column.rename({"base": "bottom"}, axis=1)
-    column["bottom"] = np.abs(column["bottom"])
+    # column["bottom"] = np.abs(column["bottom"])
 
-    if serialize:
+    if fix:
         column = fix_frequency(column, **fix_frequency_kwargs)
 
     return column
