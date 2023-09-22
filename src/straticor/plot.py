@@ -159,6 +159,6 @@ def plot_column(
         ax.add_artist(layer)
 
     if legend:
-        add_legend(column=column, ax=ax, loc="best", layer_kwargs=kwargs)
+        add_legend(column=column, ax=ax, loc="upper left", bbox_to_anchor=(1.05, 1), layer_kwargs=kwargs)
 
     return ax
