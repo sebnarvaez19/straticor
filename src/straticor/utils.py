@@ -212,14 +212,14 @@ def fix_frequency(column: DataFrame, delta: None | float = None):
     DataFrame
         Fixed column.
     """
-    
+
     x = column["bottom"].values
     y = column["environment"].values
-    
+
     def min_abs_diff(x):
         x_diff = np.diff(x)
         x_diff = x_diff[np.nonzero(x_diff)]
-        
+
         return np.min(np.abs(x_diff))
 
     differences = np.concatenate([np.diff(y), [0]])
@@ -229,7 +229,7 @@ def fix_frequency(column: DataFrame, delta: None | float = None):
 
     if delta is None:
         delta = min_abs_diff(x)
-    
+
     steps = int(np.abs(better_round((x[-1] - x[0]) / delta) + 1))
 
     x_new = np.linspace(x[0], x[-1], steps)
@@ -256,7 +256,7 @@ def fix_frequency(column: DataFrame, delta: None | float = None):
                 pass
 
     y_new[y_new == 0] = 7
-    
+
     y_new = better_round(y_new)
 
     colors = environment_color(y_new)
@@ -267,7 +267,7 @@ def fix_frequency(column: DataFrame, delta: None | float = None):
     return new_column
 
 
-def load_column(path: str, fix: bool = False, **fix_frequency_kwargs) -> DataFrame:
+def load_column(path: str, fix: bool = True, **fix_frequency_kwargs) -> DataFrame:
     """
     load_column Load a column from an SDAR Excel file and process it.
 
@@ -276,7 +276,7 @@ def load_column(path: str, fix: bool = False, **fix_frequency_kwargs) -> DataFra
     path : str
         Excel file location
     fix : bool, optional
-        If True, run ```fix_frequency``` to get a column ready to be correlated, by default False
+        If True, run ```fix_frequency``` to get a column ready to be correlated, by default True
 
     Returns
     -------
@@ -286,17 +286,18 @@ def load_column(path: str, fix: bool = False, **fix_frequency_kwargs) -> DataFra
     data_base = pd.read_excel(path, sheet_name="lithology")
     column = data_base[data_base.columns[:7]].copy()
 
-    # column = column.sort_values(by="base", ascending=False)
+    column = column.sort_values(by="base", ascending=False)
     column["environment"] = lithology_to_environemnt(column["prim_litho"])
     column["color"] = environment_color(column["environment"])
     column["label"] = environment_label(column["environment"])
 
     column = column[["base", "environment", "color", "label"]]
     column = column.rename({"base": "bottom"}, axis=1)
-    # column["bottom"] = np.abs(column["bottom"])
 
     if fix:
         column = fix_frequency(column, **fix_frequency_kwargs)
+
+    column["center"] = (np.roll(column["bottom"], 1) - column["bottom"]) / 2 + column["bottom"]
 
     return column
 
