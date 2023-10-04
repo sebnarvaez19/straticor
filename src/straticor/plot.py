@@ -130,7 +130,8 @@ def plot_column(
     column : DataFrame
         Table with the stratigraphic column information
     ax : Axes | None, optional
-        Matplotlib axes to place the plot. If it is None, the function creates a new figure with its own axes, by default None
+        Matplotlib axes to place the plot. If it is None, the function creates
+        a new figure with its own axes, by default None
     x_pos : float, optional
         Column position on x-axis, by default 0.0
     width : float, optional
@@ -159,6 +160,105 @@ def plot_column(
         ax.add_artist(layer)
 
     if legend:
-        add_legend(column=column, ax=ax, loc="upper left", bbox_to_anchor=(1.05, 1), layer_kwargs=kwargs)
+        add_legend(
+            column=column,
+            ax=ax,
+            loc="upper left",
+            bbox_to_anchor=(1.05, 1),
+            layer_kwargs=kwargs
+        )
+
+    return ax
+
+
+def plot_section(
+        col_1: DataFrame,
+        col_2: DataFrame,
+        corr_path: list[tuple[int]],
+        space: float,
+        width: float | None = None,
+        ax: Axes | None = None,
+        **kwargs,
+) -> Axes:
+    """
+    plot_section Plot a section from two stratigraphic columns previously correlated
+    with `warp_log`.
+
+    Parameters
+    ----------
+    col_1 : DataFrame
+        First stratgraphic column
+    col_2 : DataFrame
+        Second stratigraphic column
+    corr_path : list[tuple[int]]
+        Correlation path between columns, etracted with `warp_log`
+    space : float
+        Distance between columns
+    width : float | None, optional
+        Column width, if None the width calculated based on the space, by default None
+    ax : Axes | None, optional
+        Matplotlib Axes to draw the section, by default None
+    plot_column_kwargs : dict | None, optional
+        Kwargs to plot the columns with the `plot_column` function, by default None
+
+    Returns
+    -------
+    Axes
+        Section plotted
+    """
+    if ax is None:
+        _, ax = plt.subplots(figsize=(10, 8))
+
+    positions_x = [0, space]
+
+    if width is None:
+        width = space / 30
+
+    plot_column(col_1, ax=ax, x_pos=positions_x[0], width=width, legend=False, **kwargs)
+    plot_column(col_2, ax=ax, x_pos=positions_x[1] - width, width=width, legend=False, **kwargs)
+
+    corr_path_matrix = np.array(corr_path)
+
+    for i in np.arange(1, corr_path_matrix.shape[0]):
+        positions_y1 = corr_path_matrix[i - 1, :]
+        positions_y2 = corr_path_matrix[i, :]
+
+        ax.fill_between(
+            x=(positions_x[0] + width - 0.1, positions_x[1] - width + 0.1),
+            y1=(col_1["bottom"].iloc[positions_y1[0]], col_2["bottom"].iloc[positions_y1[-1]]),
+            y2=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y1[-1]]),
+            facecolor=col_1["color"].iloc[positions_y2[0]],
+            edgecolor=col_1["color"].iloc[positions_y2[0]],
+            zorder=-100,
+            **kwargs,
+        )
+
+        ax.fill_between(
+            x=(positions_x[0] + width - 0.1, positions_x[1] - width + 0.1),
+            y1=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y1[-1]]),
+            y2=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y2[-1]]),
+            facecolor=col_2["color"].iloc[positions_y2[-1]],
+            edgecolor=col_2["color"].iloc[positions_y2[-1]],
+            zorder=-100,
+            **kwargs,
+        )
+
+        ax.fill_between(
+            x=(positions_x[0] + width - 0.1, positions_x[1] - width + 0.1),
+            y1=(col_1["bottom"].iloc[positions_y1[0]], col_2["bottom"].iloc[positions_y1[-1]]),
+            y2=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y2[-1]]),
+            facecolor="none",
+            edgecolor="black",
+            zorder=-100,
+            **kwargs,
+        )
+
+    add_legend(
+        column=pd.concat([col_1, col_2]),
+        ax=ax,
+        loc="upper left",
+        bbox_to_anchor=(1.05, 1),
+        layer_kwargs=kwargs,
+    )
 
     return ax
