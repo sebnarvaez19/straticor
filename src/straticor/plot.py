@@ -224,7 +224,7 @@ def plot_section(
         positions_y2 = corr_path_matrix[i, :]
 
         ax.fill_between(
-            x=(positions_x[0] + width - 0.1, positions_x[1] - width + 0.1),
+            x=(positions_x[0] + width, positions_x[1] - width),
             y1=(col_1["bottom"].iloc[positions_y1[0]], col_2["bottom"].iloc[positions_y1[-1]]),
             y2=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y1[-1]]),
             facecolor=col_1["color"].iloc[positions_y2[0]],
@@ -234,7 +234,7 @@ def plot_section(
         )
 
         ax.fill_between(
-            x=(positions_x[0] + width - 0.1, positions_x[1] - width + 0.1),
+            x=(positions_x[0] + width, positions_x[1] - width),
             y1=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y1[-1]]),
             y2=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y2[-1]]),
             facecolor=col_2["color"].iloc[positions_y2[-1]],
@@ -244,7 +244,7 @@ def plot_section(
         )
 
         ax.fill_between(
-            x=(positions_x[0] + width - 0.1, positions_x[1] - width + 0.1),
+            x=(positions_x[0] + width, positions_x[1] - width),
             y1=(col_1["bottom"].iloc[positions_y1[0]], col_2["bottom"].iloc[positions_y1[-1]]),
             y2=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y2[-1]]),
             facecolor="none",
