@@ -226,6 +226,7 @@ def plot_section(
             y1=(b1[cpm1[idx-1]], 0.6*b1[cpm1[idx-1]] + 0.4*b2[cpm2[idx-1]], 0.4*b1[cpm1[idx]] + 0.6*b2[cpm2[idx]], b2[cpm2[idx]]),
             y2=(b1[cpm1[idx]], 0.6*b1[cpm1[idx]] + 0.4*b2[cpm2[idx]], 0.4*b1[cpm1[idx]] + 0.6*b2[cpm2[idx]], b2[cpm2[idx]]),
             color=col_1["color"].iloc[cpm1[idx]],
+            lw=0.0,
         )
 
         ax.fill_between(
@@ -233,6 +234,7 @@ def plot_section(
             y1=(b1[cpm1[idx-1]], 0.6*b1[cpm1[idx-1]] + 0.4*b2[cpm2[idx-1]], 0.4*b1[cpm1[idx-1]] + 0.6*b2[cpm2[idx-1]], b2[cpm2[idx-1]]),
             y2=(b1[cpm1[idx-1]], 0.6*b1[cpm1[idx-1]] + 0.4*b2[cpm2[idx-1]], 0.4*b1[cpm1[idx]] + 0.6*b2[cpm2[idx]], b2[cpm2[idx]]),
             color=col_2["color"].iloc[cpm2[idx]],
+            lw=0.0,
         )
 
         ax.fill_between(
