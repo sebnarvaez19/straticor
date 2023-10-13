@@ -218,38 +218,33 @@ def plot_section(
     plot_column(col_2, ax=ax, x_pos=positions_x[1] - width, width=width, legend=False, **kwargs)
 
     corr_path_matrix = np.array(corr_path)
+    cpm1 = corr_path_matrix[:, 0]
+    cpm2 = corr_path_matrix[:, 1]
 
-    for i in np.arange(1, corr_path_matrix.shape[0]):
-        positions_y1 = corr_path_matrix[i - 1, :]
-        positions_y2 = corr_path_matrix[i, :]
+    b1 = col_1["bottom"].values
+    b2 = col_2["bottom"].values
 
+    for idx in np.arange(len(cpm1)-1, 0, -1):
         ax.fill_between(
-            x=(positions_x[0] + width, positions_x[1] - width),
-            y1=(col_1["bottom"].iloc[positions_y1[0]], col_2["bottom"].iloc[positions_y1[-1]]),
-            y2=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y1[-1]]),
-            facecolor=col_1["color"].iloc[positions_y2[0]],
-            edgecolor=col_1["color"].iloc[positions_y2[0]],
-            zorder=-100,
-            **kwargs,
+            x=(width, space/2-0.1*space, space/2+0.1*space, space-width),
+            y1=(b1[cpm1[idx-1]], 0.6*b1[cpm1[idx-1]] + 0.4*b2[cpm2[idx-1]], 0.4*b1[cpm1[idx]] + 0.6*b2[cpm2[idx]], b2[cpm2[idx]]),
+            y2=(b1[cpm1[idx]], 0.6*b1[cpm1[idx]] + 0.4*b2[cpm2[idx]], 0.4*b1[cpm1[idx]] + 0.6*b2[cpm2[idx]], b2[cpm2[idx]]),
+            color=col_1["color"].iloc[cpm1[idx]],
         )
 
         ax.fill_between(
-            x=(positions_x[0] + width, positions_x[1] - width),
-            y1=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y1[-1]]),
-            y2=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y2[-1]]),
-            facecolor=col_2["color"].iloc[positions_y2[-1]],
-            edgecolor=col_2["color"].iloc[positions_y2[-1]],
-            zorder=-100,
-            **kwargs,
+            x=(width, space/2-0.1*space, space/2+0.1*space, space-width),
+            y1=(b1[cpm1[idx-1]], 0.6*b1[cpm1[idx-1]] + 0.4*b2[cpm2[idx-1]], 0.4*b1[cpm1[idx-1]] + 0.6*b2[cpm2[idx-1]], b2[cpm2[idx-1]]),
+            y2=(b1[cpm1[idx-1]], 0.6*b1[cpm1[idx-1]] + 0.4*b2[cpm2[idx-1]], 0.4*b1[cpm1[idx]] + 0.6*b2[cpm2[idx]], b2[cpm2[idx]]),
+            color=col_2["color"].iloc[cpm2[idx]],
         )
 
         ax.fill_between(
-            x=(positions_x[0] + width, positions_x[1] - width),
-            y1=(col_1["bottom"].iloc[positions_y1[0]], col_2["bottom"].iloc[positions_y1[-1]]),
-            y2=(col_1["bottom"].iloc[positions_y2[0]], col_2["bottom"].iloc[positions_y2[-1]]),
+            x=(width, space-width),
+            y1=(b1[cpm1[idx-1]], b2[cpm2[idx-1]]),
+            y2=(b1[cpm1[idx]], b2[cpm2[idx]]),
             facecolor="none",
             edgecolor="black",
-            zorder=-100,
             **kwargs,
         )
 
