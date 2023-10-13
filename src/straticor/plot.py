@@ -145,19 +145,15 @@ def plot_column(
     if ax is None:
         _, ax = plt.subplots(1)
 
-    N: int = len(column)
-
-    for i in range(1, N):
-        layer = Rectangle(
-            xy=(x_pos, column["bottom"].iloc[i]),
-            width=width,
-            height=column["bottom"].iloc[i - 1] - column["bottom"].iloc[i],
-            facecolor=column["color"].iloc[i],
+    for idx in np.arange(len(column) - 1, 0, -1):
+        ax.fill_between(
+            x=(x_pos, x_pos + width),
+            y1=(column["bottom"].iloc[idx], column["bottom"].iloc[idx]),
+            y2=(column["bottom"].iloc[idx - 1], column["bottom"].iloc[idx - 1]),
+            color=column["color"].iloc[idx],
             edgecolor="black",
             **kwargs,
         )
-
-        ax.add_artist(layer)
 
     if legend:
         add_legend(
