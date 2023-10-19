@@ -174,6 +174,8 @@ def plot_section(
         space: float,
         width: float | None = None,
         ax: Axes | None = None,
+        borders: bool = True,
+        legend: bool = True,
         **kwargs,
 ) -> Axes:
     """
@@ -194,6 +196,10 @@ def plot_section(
         Column width, if None the width calculated based on the space, by default None
     ax : Axes | None, optional
         Matplotlib Axes to draw the section, by default None
+    borders : bool, optional
+        If True, draw the borders of the section, by default True
+    legend : bool, optional
+        If True, draw the legend, by default True
     plot_column_kwargs : dict | None, optional
         Kwargs to plot the columns with the `plot_column` function, by default None
 
@@ -226,7 +232,8 @@ def plot_section(
             y1=(b1[cpm1[idx-1]], 0.6*b1[cpm1[idx-1]] + 0.4*b2[cpm2[idx-1]], 0.4*b1[cpm1[idx]] + 0.6*b2[cpm2[idx]], b2[cpm2[idx]]),
             y2=(b1[cpm1[idx]], 0.6*b1[cpm1[idx]] + 0.4*b2[cpm2[idx]], 0.4*b1[cpm1[idx]] + 0.6*b2[cpm2[idx]], b2[cpm2[idx]]),
             color=col_1["color"].iloc[cpm1[idx]],
-            lw=0.0,
+            **{key:value for key, value in kwargs.items() if key != "lw"},
+            lw=kwargs["lw"],
         )
 
         ax.fill_between(
@@ -234,24 +241,27 @@ def plot_section(
             y1=(b1[cpm1[idx-1]], 0.6*b1[cpm1[idx-1]] + 0.4*b2[cpm2[idx-1]], 0.4*b1[cpm1[idx-1]] + 0.6*b2[cpm2[idx-1]], b2[cpm2[idx-1]]),
             y2=(b1[cpm1[idx-1]], 0.6*b1[cpm1[idx-1]] + 0.4*b2[cpm2[idx-1]], 0.4*b1[cpm1[idx]] + 0.6*b2[cpm2[idx]], b2[cpm2[idx]]),
             color=col_2["color"].iloc[cpm2[idx]],
-            lw=0.0,
+            **{key:value for key, value in kwargs.items() if key != "lw"},
+            lw=kwargs["lw"],
         )
 
-        ax.fill_between(
-            x=(width, space-width),
-            y1=(b1[cpm1[idx-1]], b2[cpm2[idx-1]]),
-            y2=(b1[cpm1[idx]], b2[cpm2[idx]]),
-            facecolor="none",
-            edgecolor="black",
-            **kwargs,
-        )
+        if borders:
+            ax.fill_between(
+                x=(width, space-width),
+                y1=(b1[cpm1[idx-1]], b2[cpm2[idx-1]]),
+                y2=(b1[cpm1[idx]], b2[cpm2[idx]]),
+                facecolor="none",
+                edgecolor="black",
+                **kwargs,
+            )
 
-    add_legend(
-        column=pd.concat([col_1, col_2]),
-        ax=ax,
-        loc="upper left",
-        bbox_to_anchor=(1.05, 1),
-        layer_kwargs=kwargs,
-    )
+    if legend:
+        add_legend(
+            column=pd.concat([col_1, col_2]),
+            ax=ax,
+            loc="upper left",
+            bbox_to_anchor=(1.05, 1),
+            layer_kwargs=kwargs,
+        )
 
     return ax
